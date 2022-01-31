@@ -1,5 +1,7 @@
 // 引入全局mixin
 import mixin from './libs/mixin/mixin.js'
+// 引入下拉组件mixin
+import pageScrollMixin from './components/mescroll-uni/components/mescroll-uni/mescroll-mixins.js'
 // 全局挂载引入http相关请求拦截插件
 import Request from './libs/luch-request'
 
@@ -36,6 +38,7 @@ uni.$dlhc = $dlhc
 
 const install = (Vue) => {
 	Vue.mixin(mixin)
+	Vue.mixin(pageScrollMixin)
 
 	// #ifdef VUE3
 	// #ifndef APP-NVUE
@@ -51,7 +54,6 @@ const install = (Vue) => {
 
 	// 只有vue，挂载到Vue.prototype才有意义，因为nvue中全局Vue.prototype和Vue.mixin是无效的
 	Vue.prototype.$dlhc = $dlhc
-	// #endif
 	// #endif
 }
 
