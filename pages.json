@@ -1,7 +1,18 @@
 {
 	"pages": [
 		//pages数组中第一项表示应用启动页，参考：https://uniapp.dcloud.io/collocation/pages
-
+		{
+			"path": "pages/tab/home",
+			"style": {
+				"app-plus": {
+					"titleNView": {
+						"titleText": "首页",
+						"titleColor": "#FFFFFF",
+						"backgroundColor": "#5cb3cc"
+					}
+				}
+			}
+		},
 		{
 			"path": "pages/index/index",
 			"style": {
@@ -15,19 +26,9 @@
 			}
 		},
 		{
-			"path": "pages/tab/home",
-			"style": {
-				"navigationStyle": "custom"
-			}
-
-		},
-		{
 			"path": "pages/tab/template",
 			"style": {
-				"navigationStyle": "custom",
-				"statusbar": {
-					"background": "#ffffff"
-				}
+				"navigationStyle": "custom"
 			}
 		},
 		{
@@ -42,6 +43,11 @@
 		"navigationBarTitleText": "uni-app",
 		"navigationBarBackgroundColor": "#F8F8F8",
 		"backgroundColor": "#F8F8F8"
+	},
+	"easycom": {
+		"custom": {
+			"^dlhc-(.*)": "@/baseConfig/components/dlhc-$1/dlhc-$1.vue" // 匹配baseConfig下的自定义组件
+		}
 	},
 	"tabBar": {
 		"color": "#908f94",
@@ -58,7 +64,7 @@
 				"pagePath": "pages/tab/template",
 				"iconPath": "static/image/tabbar/template.png",
 				"selectedIconPath": "static/image/tabbar/selectedTemplate.png",
-				"text": "模板"
+				"text": "分类"
 			},
 			{
 				"pagePath": "pages/index/index",

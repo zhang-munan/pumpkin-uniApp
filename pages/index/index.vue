@@ -1,33 +1,25 @@
 <template>
-	<page-container 
-			@initData="init" 
-			:sticky="true"
-			top='80'
-	>
+	<dlhc-container @initData="init" :sticky="true">
 		<template v-slot:pageTop>
 			<view class="pageTop">
-				
+
 			</view>
 		</template>
 		<!-- 检索组件 -->
-		<Search></Search>
+		<view class="sticky">
+			<uni-search-bar></uni-search-bar>
+		</view>
 
 		<!-- 商品组件 -->
 		<good-list class="good-comp" :list="goods"></good-list>
-	</page-container>
+	</dlhc-container>
 </template>
 
 <script>
 	import {
 		apiGoods
 	} from '@/api/mock.js'
-	import PageContainer from '@/baseConfig/components/page-container/page-container.vue'
-	import Search from './components/search.vue'
 	export default {
-		components: {
-			PageContainer,
-			Search
-		},
 		data() {
 			return {
 				mescroll: null, // 初始化组件对象
@@ -76,6 +68,12 @@
 	}
 </script>
 
-<style>
-
+<style lang="scss">
+	.sticky {
+		z-index: 990;
+		position: sticky;
+		top: var(--window-top);
+		background-color: #fff;
+		padding-top: var(--status-bar-height);
+	}
 </style>

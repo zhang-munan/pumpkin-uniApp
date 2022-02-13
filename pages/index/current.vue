@@ -1,5 +1,5 @@
 <template>
-	<page-container
+	<dlhc-container
 			type="page"
 			:downOption="downOption"
 			:upOption="upOption"
@@ -27,7 +27,7 @@
 		 -->
 		<!-- 商品组件 -->
 		<good-list class="good-comp" :list="goods"></good-list>
-	</page-container>
+	</dlhc-container>
 	
 </template>
 
@@ -35,11 +35,7 @@
 	import {
 		apiGoods
 	} from "@/api/mock.js"
-	import PageContainer from '@/baseConfig/components/page-container/page-container.vue'
 	export default {
-		components: {
-			PageContainer
-		},
 		data() {
 			return {
 				mescroll: null,

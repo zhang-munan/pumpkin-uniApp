@@ -1,5 +1,5 @@
 <template>
-	<view class="body">
+	<view>
 		<!-- 头部 -->
 		<view class="my_header">
 			<view class="my_header_panel">
@@ -90,7 +90,6 @@
 	}
 </script>
 <style lang="scss" scoped>
-
 	.my_header {
 		padding-top: var(--status-bar-height);
 
@@ -213,7 +212,7 @@
 		.my_gallery_content {
 			.my_gallery_content_scroll {
 				white-space: nowrap;
-			
+
 				.my_gallery_content_scroll_panel_item {
 					width: 200px;
 					height: 150px;

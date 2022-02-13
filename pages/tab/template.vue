@@ -1,218 +1,144 @@
 <template>
-	<view class="body">
-		<view class="navbar_wrapper">
-			<view class="navbar_status"></view>
-			<view class="navbar">
-				<view class="navbar_tab">
-					<scroll-view scroll-x="true" class="navbar_tab_scroll">
-						<template v-for="(item, index) in tabList">
-							<view class="navbar_tab_item" :class="{'navbar_tab_item_selected': index === tabIndex}"
-								@click="bindTabChange(index)">
-								{{ item }}
-							</view>
-						</template>
-					</scroll-view>
-				</view>
-				<view class="navbar_operate">
-					<view class="operate_icon_panel"><i class="iconfont icon-jiahao operate_icon"></i></view>
-					<view class="operate_icon_panel"><i class="iconfont icon-sousuo operate_icon"></i></view>
-				</view>
-			</view>
+	<view>
+		<!-- 顶部 fixed定位 -->
+		<view class="top-warp">
+			<view>顶部区域</view>
+			<view style="font-size: 24rpx;">通过fixed定位其他元素,实现"局部区域滚动"</view>
 		</view>
-		<view class="template_list">
-			<swiper class="swiper" :current="tabIndex" @change="bindSwiperChange">
-				<template v-for="(item,index) in tabList">
-					<swiper-item>
-						<scroll-view scroll-y="true" class="swiper_item_scroll">
-							<template v-for="item in 10">
-								<view class="swiper_item" @click="$dlhc.route('/pages/index/current')">
-									<view class="swiper_item_header">
-										<view class="swiper_item_header_title">加速器登录</view>
-										<view class="swiper_item_header_time">2021-12-4</view>
-									</view>
-									<view class="swiper_item_tag">
-										<view class="swiper_item_tag_item">
-											
-										</view>
-									</view>
-								</view>
-							</template>
-						</scroll-view>
-					</swiper-item>
-				</template>
-			</swiper>
-		</view>
+
+		<!-- 左边 fixed定位 -->
+		<scroll-view class="left-warp" :scroll-y="true">
+			<view class="tab" :class="{active:i==tabIndex}" v-for="(tab,i) in tabs" :key="i" @click="tabChange(i)">
+				{{tab}}</view>
+		</scroll-view>
+
+		<dlhc-container ref="mescrollRef" :top="(iStatusBarHeight + 44)+'px'" @initData="init">
+			<good-list :list="goods"></good-list>
+		</dlhc-container>
 	</view>
 </template>
 
+
 <script>
+	import {
+		apiGoods,
+		apiGetTabs
+	} from "@/api/mock.js"
+
 	export default {
 		data() {
 			return {
-				tabIndex: 0,
-				tabList: ["全部", "注册登录", "消息", "个人中心", "设置", "首页", "分类", "其他"]
+				iStatusBarHeight: 0,
+				goods: [], // 数据列表
+				tabs: [], // tabs异步获取
+				tabIndex: 0 // tab下标
 			}
 		},
 		onLoad() {
-			this.$api.fetchMenu({}).then(res => {
-				console.log(res)
-			})
+			this.iStatusBarHeight = uni.getSystemInfoSync().statusBarHeight
 		},
 		methods: {
-			navigateTo() {
-				this.$dlhc.route('/pages/index/current')
+			/**
+			 * 初始化数据
+			 * @param {Object} options
+			 */
+			init(options) {
+				this.mescroll = options
+				this.getGoods(options)
 			},
 
-			/**
-			 * 点击顶部tab
-			 * @param {Object} e
-			 */
-			bindTabChange(e) {
-				this.tabIndex = Number(e)
-			},
+			getGoods(page) {
+				// tabs异步获取
+				if (this.tabs.length == 0) {
+					apiGetTabs().then(res => {
+						this.tabs = res
+						this.mescroll.resetUpScroll() // 重新触发upCallback
+					}).catch(() => {
+						this.mescroll.endErr()
+					})
+					return // 此处return,先获取tabs
+				}
 
-			/**
-			 * 滑动滑块
-			 * @param {Object} e
-			 */
-			bindSwiperChange(e) {
-				this.tabIndex = e.detail.current
+				//联网加载数据
+				let keyword = this.tabs[this.tabIndex]
+				apiGoods(page.num, page.size, keyword).then(res => {
+					//联网成功的回调,隐藏下拉刷新和上拉加载的状态;
+					this.mescroll.endSuccess(res.list.length);
+					//设置列表数据
+					if (page.num == 1) this.goods = []; //如果是第一页需手动制空列表
+					this.goods = this.goods.concat(res.list); //追加新数据
+				}).catch(() => {
+					//联网失败, 结束加载
+					this.mescroll.endErr();
+				})
+			},
+			// 切换菜单
+			tabChange(i) {
+				if (this.tabIndex != i) {
+					this.tabIndex = i
+					this.goods = []; // 先置空列表,显示加载进度条
+					this.mescroll.resetUpScroll(); // 重置列表数据
+				}
 			}
-
 		}
 	}
 </script>
-<style lang="scss" scoped>
 
-	.navbar_wrapper {
-		position: fixed;
-		top: 0;
+
+<style lang="scss">
+	/* 顶部 fixed定位*/
+	.top-warp {
 		left: 0;
-		right: 0;
-		background-color: $uni-color-primary;
+		width: 100%;
+		z-index: 200;
+		height: calc(var(--status-bar-height) + 44px);
+		color: #FFFFFF;
+		position: fixed;
+		font-size: 28rpx;
+		text-align: center;
+		top: var(--window-top);
+		box-sizing: border-box;
+		background-color: #5cb3cc;
+		// background-color: inherit;
+		padding-top: var(--status-bar-height);
+	}
 
-		.navbar_status {
-			height: var(--status-bar-height);
-		}
+	/* 左边 fixed定位*/
+	.left-warp {
+		z-index: 100;
+		position: fixed;
+		top: var(--window-top);
+		left: 0;
+		width: 180rpx;
+		padding-top: calc(var(--status-bar-height) + 44px);
+		background-color: #eee;
 
-		.navbar {
-			color: #FFFFFF;
-			height: 44px;
-			display: flex;
-			align-items: center;
-			background-color: $uni-color-primary;
+		.tab {
+			font-size: 28rpx;
+			padding: 28rpx;
 
-			.navbar_tab {
-				flex: 1;
-				height: 100%;
-				font-weight: bold;
-
-				.navbar_tab_scroll {
-					height: 100%;
-					position: relative;
-					white-space: nowrap;
-					width: calc(100vw - 200rpx);
-
-					&:before {
-						bottom: 0;
-						content: "";
-						width: 100%;
-						z-index: 100;
-						height: 10px;
-						position: absolute;
-						background-color: $uni-color-primary;
-					}
-				}
-
-				.navbar_tab_item {
-					height: 100%;
-					font-size: 34rpx;
-					line-height: 40px;
-					margin-left: 40rpx;
-					display: inline-block;
-					transition: all .6s ease;
-					color: rgba($color: #ffffff, $alpha: .7);
-
-					&.navbar_tab_item_selected {
-						color: #FFFFFF;
-						font-size: 32rpx;
-					}
-				}
-			}
-
-			.navbar_operate {
-				display: flex;
-				margin-right: 10rpx;
-
-				.operate_icon_panel {
-					padding: 0 30rpx;
-					position: relative;
-
-					&:before {
-						top: 50%;
-						right: 0;
-						content: "";
-						width: 2rpx;
-						height: 65%;
-						opacity: .5;
-						position: absolute;
-						background-color: #FFFFFF;
-						transform: translateY(-50%);
-					}
-
-					&:last-child:before {
-						display: none;
-					}
-
-					.operate_icon {
-						font-size: 34rpx;
-						font-weight: bold;
-					}
-				}
+			&.active {
+				background-color: #fff;
 			}
 		}
 	}
 
-	.template_list {
+	// 设置padding
+	.mescroll-body,
+	/deep/.mescroll-body {
+		padding-left: 180rpx;
+	}
+
+	/* 底部 fixed定位*/
+	.bottom-warp {
+		z-index: 200;
+		position: fixed;
+		left: 0;
 		bottom: 0;
-		left: 0;
-		right: 0;
-		position: fixed;
-		height: calc(100vh - (var(--status-bar-height) + 44px));
-
-		.swiper {
-			height: 100%;
-			
-			.swiper_item_scroll {
-				background-color: $uni-bg-color-grey;
-				height: calc(100vh - (var(--status-bar-height) + 44px));
-				
-				.swiper_item {
-					padding: 40rpx;
-					margin-bottom: 10rpx;
-					background-color: #FFFFFF;
-					
-					.swiper_item_header {
-						display: flex;
-						margin-bottom: 10rpx;
-						align-items: center;
-						justify-content: space-between;
-						
-						.swiper_item_header_title {
-							font-size: 32rpx;
-						}
-						
-						.swiper_item_header_time {
-							font-size: 30rpx;
-							color: $uni-color-primary;
-						}
-					}
-				}
-			}
-		}
-	}
-
-	.list_scroll {
-		height: calc(100vh - (var(--status-bar-height) + 44px));
+		width: 100%;
+		height: 100rpx;
+		line-height: 100rpx;
+		text-align: center;
+		background-color: #FF6990;
 	}
 </style>

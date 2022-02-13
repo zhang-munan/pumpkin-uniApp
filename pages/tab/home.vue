@@ -1,12 +1,6 @@
 <template>
-	<page-container
-			type="page"
-			:sticky="true"
-			:downOption="downOption"
-			:upOption="upOption"
-			@initData="init"
-			@emptyClick="emptyClick"
-	>
+	<dlhc-container :sticky="true" :downOption="downOption" :upOption="upOption" @initData="init"
+		@emptyClick="emptyClick">
 		<view class="tip">展示down和up的所有配置项</view>
 		<view class="tip" @click="triggerDownScroll">点此主动触发下拉刷新</view>
 		<view class="tip" @click="scrollToY(200)">点此测试滚动到指定位置 (如: 200px)</view>
@@ -14,12 +8,14 @@
 		<view class="tip" @click="scrollIntoView('#anchorPoint')" id="anchorPoint">点此测试滚动到指定view (元素在本页)</view>
 		<!-- 滚动到子组件,小程序必须用'跨自定义组件的后代选择器' -->
 		<view class="tip" @click="scrollIntoView('.good-comp >>> #good2')">点此测试滚动到指定view (元素在子组件)</view>
-		
+		<!-- 页面跳转 -->
+		<view class="tip" @click="toCurrentPage()">跳转页面</view>
+
 		<!-- sticky吸顶悬浮的菜单 (父元素必须是 mescroll, 且mescroll配置:sticky="true") -->
 		<view class="sticky-tabs">
 			<me-tabs v-model="tabIndex" :tabs="tabs" @change="tabChange"></me-tabs>
 		</view>
-		
+
 		<!-- 视频请尽量使用me-video组件 (video在APP中是原生组件, 真机APP端下拉渲染不及时.) -->
 		<!-- 使用me-video组件, 未播放时自动展示image封面, 播放时才显示video, 提高性能; 当加上 :mescroll="mescroll"之后, 如果播放中执行下拉,会自动隐藏视频,显示封面,避免视频下拉悬浮错位(仅APP端这样处理) -->
 		<!-- <me-video v-if="tabIndex==0" :mescroll="mescroll"
@@ -28,24 +24,31 @@
 		 -->
 		<!-- 商品组件 -->
 		<good-list class="good-comp" :list="goods"></good-list>
-	</page-container>
-	
+	</dlhc-container>
+
 </template>
 
 <script>
 	import {
 		apiGoods
 	} from "@/api/mock.js"
-	import PageContainer from '@/baseConfig/components/page-container/page-container.vue'
+
+	// import { fetchMenu } from "@/common/api.js"
 	export default {
-		components: {
-			PageContainer
-		},
 		data() {
 			return {
 				mescroll: null,
 				goods: [], //列表数据
-				tabs: [{name:'全部',type:'xx'}, {name:'奶粉',type:'xx'}, {name:'图书',type:'xx'}],
+				tabs: [{
+					name: '全部',
+					type: 'xx'
+				}, {
+					name: '奶粉',
+					type: 'xx'
+				}, {
+					name: '图书',
+					type: 'xx'
+				}],
 				tabIndex: 0, // tab下标
 				downOption: {
 					use: true, // 是否启用下拉刷新; 默认true
@@ -107,8 +110,12 @@
 				},
 			}
 		},
+		onLoad() {
+			// fetchMenu()
+			// console.log(this.$d.test.letter("123"))
+		},
 		methods: {
-			
+
 			/**
 			 * 初始化数据
 			 * @param {Object} options
@@ -117,57 +124,48 @@
 				this.mescroll = options
 				this.getGoods(options)
 			},
-			
+
 			/**
 			 * 获取数据
 			 */
 			getGoods(page) {
 				let curTab = this.tabs[this.tabIndex]
 				let keyword = curTab.name // 具体项目中,您可能取的是tab中的type,status等字段
-				apiGoods(page.num, page.size, keyword).then(res=>{
-					//联网成功的回调,隐藏下拉刷新和上拉加载的状态;
-					//mescroll会根据传的参数,自动判断列表如果无任何数据,则提示空;列表无下一页数据,则提示无更多数据;
-				
-					//方法一(推荐): 后台接口有返回列表的总页数 totalPage
-					//this.mescroll.endByPage(res.list.length, res.totalPage); //必传参数(当前页的数据个数, 总页数)
-				
-					//方法二(推荐): 后台接口有返回列表的总数据量 totalSize
-					//this.mescroll.endBySize(res.list.length, res.totalSize); //必传参数(当前页的数据个数, 总数据量)
-				
-					//方法三(推荐): 您有其他方式知道是否有下一页 hasNext
-					this.mescroll.endSuccess(res.list.length, true); //必传参数(当前页的数据个数, 是否有下一页true/false)
-				
-					//方法四 (不推荐),会存在一个小问题:比如列表共有20条数据,每页加载10条,共2页.如果只根据当前页的数据个数判断,则需翻到第三页才会知道无更多数据
-					// this.mescroll.endSuccess(res.list.length);
-				
+				apiGoods(page.num, page.size, keyword).then(res => {
+					this.mescroll.endBySize(res.list.length, res.totalSize); //必传参数(当前页的数据个数, 总数据量)
 					//设置列表数据
-					if(page.num == 1) this.goods = []; //如果是第一页需手动制空列表
-					this.goods=this.goods.concat(res.list); //追加新数据
-				}).catch(()=>{
+					if (page.num == 1) this.goods = []; //如果是第一页需手动制空列表
+					this.goods = this.goods.concat(res.list); //追加新数据
+				}).catch(() => {
 					//联网失败, 结束加载
 					this.mescroll.endErr();
 				})
 			},
 			// 切换菜单
 			tabChange() {
-				this.goods = []// 先置空列表,显示加载进度
+				this.goods = [] // 先置空列表,显示加载进度
 				this.mescroll.resetUpScroll() // 再刷新列表数据
 			},
 			// 主动触发下拉刷新
-			triggerDownScroll(){
+			triggerDownScroll() {
 				this.mescroll.triggerDownScroll()
 			},
 			// 滚动到指定位置,传数字 (单位px)
-			scrollToY(y){
+			scrollToY(y) {
 				// this.mescroll.scrollTo(y) // 过渡动画时长默认300ms
 				this.mescroll.scrollTo(y, 0) // 无过渡动画
 			},
 			// 滚动到指定view,传view的id
-			scrollIntoView(viewId){
+			scrollIntoView(viewId) {
 				// this.mescroll.scrollTo(viewId) // 过渡动画时长默认300ms
 				this.mescroll.scrollTo(viewId, 0) // 无过渡动画
 			},
-			
+
+			/** 跳转 */
+			toCurrentPage() {
+				this.$d.route('/pages/index/current')
+			},
+
 			/**
 			 * 
 			 */
